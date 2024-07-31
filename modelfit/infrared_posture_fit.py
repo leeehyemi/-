@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import layers  
 from tensorflow.keras.models import load_model  
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  
-from tensorflow.keras.preprocessing.image import ImageDataGenerator  # 데이터 증식
+from tensorflow.keras.preprocessing.image import ImageDataGenerator  # 데이터 증식 라이브러리
 
 # 데이터셋 로드 함수 정의
 def load_dataset(path, img_size=(224, 224)):
@@ -45,13 +45,13 @@ X_train, X_test, y_train, y_test = train_test_split(images, posture_labels, test
 
 # 데이터 증식 설정
 datagen = ImageDataGenerator(
-    rotation_range=36,  # 이미지를 무작위로 ±36도까지 회전
-    zoom_range=0.3,  # 이미지를 무작위로 ±30%까지 확대/축소
+    rotation_range=36,  # ±36도까지 회전
+    zoom_range=0.3,  # ±30%까지 확대/축소
     fill_mode='nearest'  # 새로운 픽셀 값을 주변 픽셀로 채움
 )
 
 # 모델 생성
-num_classes = len(posture_to_int)  # 클래스 수 계산
+num_classes = len(posture_to_int)  
 
 inputs = tf.keras.Input(shape=(224, 224, 3))  # 입력 레이어 정의
 features = layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(inputs)  # 첫 번째 합성곱 레이어
@@ -75,7 +75,7 @@ callbacks_list = [
 model.compile(optimizer='adam', loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
 # 모델 학습
-model.fit(datagen.flow(X_train, y_train, batch_size=32),  
+model.fit(datagen.flow(X_train, y_train, batch_size=32), 
           validation_data=(X_test, y_test),
           epochs=50, 
           callbacks=callbacks_list)
