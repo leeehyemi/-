@@ -6,8 +6,9 @@ import tensorflow as tf
 from tensorflow.keras import layers  
 from tensorflow.keras.models import load_model  
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  
+from tensorflow.keras.preprocessing.image import ImageDataGenerator  # 데이터 증식
 
-# load dataset
+# 데이터셋 로드 함수 정의
 def load_dataset(path, img_size=(224, 224)):
     images = []  # 이미지 데이터를 저장할 리스트
     postures = []  # 자세 라벨을 저장할 리스트
@@ -24,7 +25,7 @@ def load_dataset(path, img_size=(224, 224)):
             
     return np.array(images), np.array(postures)  # 이미지와 라벨을 배열로 변환하여 반환
 
-# 데이터 전처리 
+# 데이터 전처리 함수 정의
 def preprocess_data(images):
     images = images.astype("float32") / 255.0  # 이미지를 float32 타입으로 변환하고 255로 나눠서 정규화
     return images  # 전처리된 이미지 반환
@@ -41,6 +42,13 @@ posture_labels = np.array([posture_to_int[posture] for posture in postures])  # 
 
 # 데이터셋 학습 및 검증 세트로 분할
 X_train, X_test, y_train, y_test = train_test_split(images, posture_labels, test_size=0.2, random_state=1)
+
+# 데이터 증식 설정
+datagen = ImageDataGenerator(
+    rotation_range=36,  # 이미지를 무작위로 ±36도까지 회전
+    zoom_range=0.3,  # 이미지를 무작위로 ±30%까지 확대/축소
+    fill_mode='nearest'  # 새로운 픽셀 값을 주변 픽셀로 채움
+)
 
 # 모델 생성
 num_classes = len(posture_to_int)  # 클래스 수 계산
@@ -67,7 +75,10 @@ callbacks_list = [
 model.compile(optimizer='adam', loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
 # 모델 학습
-model.fit(X_train, y_train, validation_split=0.2, epochs=50, callbacks=callbacks_list, batch_size=32)
+model.fit(datagen.flow(X_train, y_train, batch_size=32),  
+          validation_data=(X_test, y_test),
+          epochs=50, 
+          callbacks=callbacks_list)
 
 # 모델 저장
 model.save("infrared_posture_model.h5")
